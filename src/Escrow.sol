@@ -50,7 +50,15 @@ contract Escrow {
     // Events
     // -------------------------------------------------------------------------
 
-    event EscrowCreated(uint256 indexed id, address indexed buyer, address indexed seller, address token, uint256 amount, uint256 sellerTimeout, uint256 buyerTimeout);
+    event EscrowCreated(
+        uint256 indexed id,
+        address indexed buyer,
+        address indexed seller,
+        address token,
+        uint256 amount,
+        uint256 sellerTimeout,
+        uint256 buyerTimeout
+    );
     event OrderProcessed(uint256 indexed id);
     event ReceiptConfirmed(uint256 indexed id);
     event EscrowCancelled(uint256 indexed id);
@@ -218,7 +226,6 @@ contract Escrow {
             emit EscrowCancelled(_id);
 
             IERC20(txn.token).safeTransfer(txn.buyer, txn.amount);
-
         } else if (txn.state == EscrowState.IN_PROGRESS) {
             // Buyer failed to confirm receipt in time, pay seller
             if (block.timestamp <= txn.inProgressAt + txn.buyerTimeout) revert TimeoutNotReached();
@@ -248,7 +255,8 @@ contract Escrow {
 
         // Can only mutually cancel if it hasn't been completed, already cancelled, or resolved
         require(
-            txn.state == EscrowState.CREATED || txn.state == EscrowState.IN_PROGRESS || txn.state == EscrowState.DISPUTED,
+            txn.state == EscrowState.CREATED || txn.state == EscrowState.IN_PROGRESS
+                || txn.state == EscrowState.DISPUTED,
             "Cannot cancel in current state"
         );
 
@@ -293,7 +301,12 @@ contract Escrow {
      * @param _id The escrow ID.
      * @param _winner The address of the winning party (must be buyer or seller).
      */
-    function resolveDispute(uint256 _id, address _winner) external nonReentrant onlyArbiter inState(_id, EscrowState.DISPUTED) {
+    function resolveDispute(uint256 _id, address _winner)
+        external
+        nonReentrant
+        onlyArbiter
+        inState(_id, EscrowState.DISPUTED)
+    {
         EscrowTransaction storage txn = escrows[_id];
         require(_winner == txn.buyer || _winner == txn.seller, "Invalid winner address");
 

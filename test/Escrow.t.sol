@@ -15,7 +15,7 @@ contract EscrowTest is Test {
     address public other = address(0x4);
 
     uint256 public constant ARBITER_FEE_BPS = 250; // 2.5%
-    uint256 public constant AMOUNT = 1000 * 10**18;
+    uint256 public constant AMOUNT = 1000 * 10 ** 18;
     uint256 public constant SELLER_TIMEOUT = 1 days;
     uint256 public constant BUYER_TIMEOUT = 3 days;
 
@@ -40,26 +40,23 @@ contract EscrowTest is Test {
         assertEq(id, 1);
 
         // Retrieve transaction using struct
-        (
-            , // id
+        (, // id
             address eBuyer,
             address eSeller,
             address eToken,
-            uint256 eAmount,
-            , // sellerTimeout
+            uint256 eAmount,, // sellerTimeout
             , // buyerTimeout
             , // createdAt
             , // inProgressAt
-            Escrow.EscrowState eState,
-            , // buyerAgreed
-             // sellerAgreed
+            Escrow.EscrowState eState,, // buyerAgreed
+            // sellerAgreed
         ) = escrow.escrows(id);
 
         assertEq(eBuyer, buyer);
         assertEq(eSeller, seller);
         assertEq(eToken, address(token));
         assertEq(eAmount, AMOUNT);
-        assertEq(uint(eState), uint(Escrow.EscrowState.CREATED));
+        assertEq(uint256(eState), uint256(Escrow.EscrowState.CREATED));
 
         assertEq(token.balanceOf(address(escrow)), AMOUNT);
         assertEq(token.balanceOf(buyer), (AMOUNT * 10) - AMOUNT);
@@ -73,13 +70,13 @@ contract EscrowTest is Test {
         escrow.processOrder(id);
 
         (,,,,,,,,, Escrow.EscrowState eState,,) = escrow.escrows(id);
-        assertEq(uint(eState), uint(Escrow.EscrowState.IN_PROGRESS));
+        assertEq(uint256(eState), uint256(Escrow.EscrowState.IN_PROGRESS));
 
         vm.prank(buyer);
         escrow.confirmReceipt(id);
 
         (,,,,,,,,, Escrow.EscrowState finalState,,) = escrow.escrows(id);
-        assertEq(uint(finalState), uint(Escrow.EscrowState.COMPLETED));
+        assertEq(uint256(finalState), uint256(Escrow.EscrowState.COMPLETED));
 
         assertEq(token.balanceOf(seller), AMOUNT);
         assertEq(token.balanceOf(address(escrow)), 0);
@@ -95,7 +92,7 @@ contract EscrowTest is Test {
         escrow.claimTimeout(id);
 
         (,,,,,,,,, Escrow.EscrowState finalState,,) = escrow.escrows(id);
-        assertEq(uint(finalState), uint(Escrow.EscrowState.CANCELLED));
+        assertEq(uint256(finalState), uint256(Escrow.EscrowState.CANCELLED));
 
         assertEq(token.balanceOf(buyer), AMOUNT * 10);
         assertEq(token.balanceOf(address(escrow)), 0);
@@ -114,7 +111,7 @@ contract EscrowTest is Test {
         escrow.claimTimeout(id);
 
         (,,,,,,,,, Escrow.EscrowState finalState,,) = escrow.escrows(id);
-        assertEq(uint(finalState), uint(Escrow.EscrowState.COMPLETED));
+        assertEq(uint256(finalState), uint256(Escrow.EscrowState.COMPLETED));
 
         assertEq(token.balanceOf(seller), AMOUNT);
         assertEq(token.balanceOf(address(escrow)), 0);
@@ -135,7 +132,7 @@ contract EscrowTest is Test {
         escrow.requestCancel(id);
 
         (,,,,,,,,, Escrow.EscrowState finalState,,) = escrow.escrows(id);
-        assertEq(uint(finalState), uint(Escrow.EscrowState.CANCELLED));
+        assertEq(uint256(finalState), uint256(Escrow.EscrowState.CANCELLED));
 
         assertEq(token.balanceOf(buyer), AMOUNT * 10);
         assertEq(token.balanceOf(address(escrow)), 0);
@@ -152,13 +149,13 @@ contract EscrowTest is Test {
         escrow.initiateDispute(id);
 
         (,,,,,,,,, Escrow.EscrowState dState,,) = escrow.escrows(id);
-        assertEq(uint(dState), uint(Escrow.EscrowState.DISPUTED));
+        assertEq(uint256(dState), uint256(Escrow.EscrowState.DISPUTED));
 
         vm.prank(arbiter);
         escrow.resolveDispute(id, buyer);
 
         (,,,,,,,,, Escrow.EscrowState finalState,,) = escrow.escrows(id);
-        assertEq(uint(finalState), uint(Escrow.EscrowState.RESOLVED));
+        assertEq(uint256(finalState), uint256(Escrow.EscrowState.RESOLVED));
 
         uint256 fee = (AMOUNT * ARBITER_FEE_BPS) / 10000;
         uint256 payout = AMOUNT - fee;
@@ -200,7 +197,7 @@ contract EscrowFeeOnTransferTest is Test {
     address public buyer = address(0x2);
     address public seller = address(0x3);
 
-    uint256 public constant AMOUNT = 1000 * 10**18;
+    uint256 public constant AMOUNT = 1000 * 10 ** 18;
 
     function setUp() public {
         escrow = new Escrow(arbiter, 250);
@@ -216,7 +213,7 @@ contract EscrowFeeOnTransferTest is Test {
         vm.prank(buyer);
         uint256 id = escrow.createEscrow(seller, address(token), AMOUNT, 1 days, 3 days);
 
-        (,,,,uint256 eAmount,,,,,,,) = escrow.escrows(id);
+        (,,,, uint256 eAmount,,,,,,,) = escrow.escrows(id);
 
         // Fee is 5%, so 1000 * 0.95 = 950
         uint256 expectedAmount = (AMOUNT * 95) / 100;
